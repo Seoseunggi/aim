@@ -21,7 +21,7 @@ const exp = require("constants");
 
 // app 생성
 const app = express();
-// PORT 번호 기본값 5000으로 설정
+// PORT 번호 기본값 5000으로 설정     npm run start
 const PORT = process.env.PORT || 5001;
 
 app.use(
