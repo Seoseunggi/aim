@@ -517,6 +517,27 @@ app.post("/add_ai_project_files", async (req, res, next) => {
     );
 });
 
+//PDF 파일삭제 기록
+app.post("/delete_ai_project_files", async (req, res, next) => {
+  const client_project = req.body.project;
+  const client_filename = req.body.filename;
+
+  const pool = await poolPromise;
+  const result = await pool
+    .request()
+    .query(
+      `DELETE FROM ai_project_files WHERE filename = '${client_filename}'`,
+      function (err, value) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("complete delete - MSSQL !!!!!");
+          res.send({ result: "complete delete - MSSQL !!!!!" });
+        }
+      }
+    );
+});
+
 //프로젝트 리스트 확인
 app.post("/view_ai_project", async (req, res, next) => {
   const pool = await poolPromise;

@@ -46,7 +46,7 @@ def heavy_work(arg):
 def delete():
   
   p = request.form.get('project_name')
-  new_dir = "C:/chatbot/python/uploadapi/uploads/" + p
+  new_dir = "C:/chatbot/AMS2/uploadapi/uploads/" + p
   
   if os.path.isdir(new_dir):
     shutil.rmtree(new_dir)
@@ -55,6 +55,34 @@ def delete():
     raise ValueError("해당 경로를 확인해주세요")
   
   return jsonify({'message': '업로드 폴더 삭제 완료'})   
+
+
+# 파일 삭제
+@app.route('/filedelete', methods=['GET', 'POST'])
+@cross_origin(supports_credentials=True) #CORS 동작 되는 코드
+def deletefile():
+  
+  p = request.form.get('project')
+  f = request.form.get("file")
+  new_dir = "C:/chatbot/AMS2/uploadapi/uploads/" + p
+  file_dir = new_dir + "/" + f  
+  
+  if os.path.isfile(file_dir):    
+    os.remove(file_dir) #파일 삭제
+    os.remove(file_dir + ".txt") #txt 파일도 삭제
+    print('deleted file')
+    
+    params = {
+    "param1": p,
+    "param2": f,
+    }    
+    res = requests.post("http://192.168.4.76:3000/chromafiled", (params))  
+    print("###### chromaDB 파일 정보 삭제 완료 !! ########")
+    
+  else:
+    raise ValueError("해당 파일을 확인해주세요")
+  
+  return jsonify({'message': 'upload 폴더 내, 요청 파일 삭제 완료'})   
 
 
 
@@ -80,7 +108,7 @@ def hello():
         p = request.form.get('project') #프로젝트명
         #print(p)
         
-        new_dir = "C:/chatbot/python/uploadapi/uploads/" + p
+        new_dir = "C:/chatbot/AMS2/uploadapi/uploads/" + p
         if(os.path.isdir(new_dir) == False) :
           os.makedirs(new_dir)
                   

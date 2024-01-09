@@ -11,6 +11,7 @@
   let project_list_db = []; //프로젝트 select DB리스트
   let project_file_list_db = []; //프로젝트 select 파일 DB리스트
   let uploading; //업로드중
+  let deleting; //삭제중
   let delete_list; //프로젝트 삭제 보여주기
 
   let Icon = 'static/uploading.gif'
@@ -24,34 +25,31 @@
     db_select_project();
   })
 
+  ///
+  ///
   //파일 업로드 API
   const upload = async () => {
-
     if(select_value === 'Select project' || !select_value) {
       alert('프로젝트를 먼저 선택 해 주세요.')
       return;
-    }
-    
+    }    
     if(!files) {
       alert('전송 할 파일을 선택 해 주세요.')
       return;
     }
 
     const formData = new FormData();
-
     for(const fi of files) {
       formData.append("file", fi); 
     }
     formData.append("project", select_value); //프로젝트 정보도 함께 보냄
     console.log("client message: 보낼준비");
-
     uploading = '업로드중'
     
     //python uploadapi 파일 저장
     const res = await axios.post("http://192.168.4.76:5000/fileupload", formData).then(response => {
       console.log(response.data);
       pdf_text = response.data;
-
       uploading = '' //업로드중 끝
     })
 
@@ -73,8 +71,53 @@
     sp.type = 'file';
 
     db_select_project_files(); //파일 리스트 갱신    
-
   }  
+  ///upload 끝
+  /////////////
+
+  ///
+  ///
+  //파일 삭제 API
+  const delete_file = async (e) => {
+
+    if (confirm('현재 파일을 삭제하시겠습니까?')) {
+      // Save it!
+      console.log('파일 삭제 진행.');
+    } else {
+      // Do nothing!
+      console.log('파일 삭제 취소.');
+      return;
+    }
+
+  const formData = new FormData();
+  formData.append("project", select_value); //프로젝트 정보도 함께 보냄
+  formData.append("file", e.target.id); //현재 파일 이름   
+  console.log("client message: 보낼준비");
+  deleting = '삭제중'
+
+  //python uploadapi 파일 삭제
+  const res = await axios.post("http://192.168.4.76:5000/filedelete", formData).then(response => {
+    console.log(response.data);
+    //pdf_text = response.data;
+    deleting = '' //삭제중 끝
+  })
+
+  //MSSQL 리스트 삭제  
+  const res2 = await axios.post("http://192.168.4.76:5001/delete_ai_project_files", {
+    project: select_value,
+    filename: e.target.id
+    }).then(response => {
+      console.log(response.data);
+      //pdf_text = response.data;        
+    })
+
+  db_select_project_files(); //파일 리스트 갱신    
+  }  
+  ///파일 삭제 끝
+  /////////////
+
+
+
   
   //키입력값 저장
   function fn_add_db(e) {
@@ -247,7 +290,10 @@
     <ul class="list-group">
       
       {#each project_file_list_db as list (list.no)}
-        <li class="list-group-item">{list.filename}</li>
+        <li class="list-group-item">
+          <span style="vertical-align: middle;">{list.filename}</span>&nbsp;&nbsp;
+          <button class="btn btn-outline-secondary" style="text-align:right" type="button"  id={list.filename} on:click={delete_file}>X</button>
+        </li>
       {:else}
         <li class="list-group-item">업로드 파일이 없습니다.</li>
       {/each}
