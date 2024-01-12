@@ -81,7 +81,16 @@ function Navybar(props) {
             <Nav.Link href="/Board_list">게시판</Nav.Link>
             {/* <Nav.Link href="/login">로그인화면</Nav.Link> */}
 
-            <Nav.Link href="/board_toastui">개발테스트</Nav.Link>
+            <Nav.Link
+              style={
+                props.loginbutton === "false" || userInfo?.name !== "서승기"
+                  ? { display: "none" }
+                  : { display: "block" }
+              }
+              href="/board_toastui"
+            >
+              개발테스트
+            </Nav.Link>
             <Nav.Link
               style={
                 props.loginbutton === "false"

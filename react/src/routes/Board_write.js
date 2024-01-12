@@ -76,6 +76,7 @@ const formats = [
 
 // add an array of values
 const fontFamilyArr = [
+  "Arial",
   "나눔고딕",
   "Roboto",
   "Times New Roman",
@@ -87,7 +88,16 @@ let fonts = Quill.import("attributors/style/font");
 fonts.whitelist = fontFamilyArr;
 Quill.register(fonts, true);
 
-const fontSizeArr = ["10px", "11px", "12px", "14px", "18px", "24px", "36px"];
+const fontSizeArr = [
+  "10px",
+  "11px",
+  "12px",
+  "14px",
+  "16px",
+  "18px",
+  "24px",
+  "36px",
+];
 var Size = Quill.import("attributors/style/size");
 Size.whitelist = fontSizeArr;
 Quill.register(Size, true);

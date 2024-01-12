@@ -571,6 +571,47 @@ app.post("/view_ai_project_files", async (req, res, next) => {
     );
 });
 
+//project 인스트럭션 추가
+app.post("/add_ai_instruction", async (req, res, next) => {
+  const client_project = req.body.project;
+  const client_instruction = req.body.inst;
+
+  const pool = await poolPromise;
+  const result = await pool
+    .request()
+    .query(
+      `UPDATE ai_project SET instruction = '${client_instruction}' WHERE project = '${client_project}'`,
+      function (err, value) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("인스트럭션 업데이트 완료!!!!!");
+          res.send({ result: "인스트럭션 업데이트 완료" });
+        }
+      }
+    );
+});
+
+//인스트럭션 초기 로딩
+app.post("/view_ai_instruction", async (req, res, next) => {
+  const client_project = req.body.project;
+
+  const pool = await poolPromise;
+  const result = await pool
+    .request()
+    .query(
+      `SELECT * from ai_project WHERE project = '${client_project}'`,
+      function (err, value) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("complete view DB instruction !!!!!");
+          res.send(value);
+        }
+      }
+    );
+});
+
 //파이썬에서 여기로 접속 테스트, req.body 로 받음
 app.post("/py", async (req, res, next) => {
   console.log(req.body.param1);

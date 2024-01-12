@@ -61,13 +61,13 @@ function Login() {
       setItemWithExpireTime(
         "userinfo",
         JSON.stringify(res.data.value[0]),
-        180 * 60 * 1000
-      ); //180분
+        600 * 60 * 1000
+      ); //600분 = 10시간
       setItemWithExpireTime(
         "server_session",
         JSON.stringify(res.data.server_session),
-        180 * 60 * 1000
-      ); //180분
+        600 * 60 * 1000
+      ); //600분 = 10시간
       //setNavName = res.data.value[0].name;
 
       //REDUX 사용

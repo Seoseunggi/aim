@@ -10,14 +10,18 @@
 
 <ul class="nav nav-underline">
   <li class="nav-item">
-    <a class="nav-link active" aria-current="page" use:link href="/" >Home</a>
+    <!-- <a class="nav-link active" aria-current="page" use:link href="/" >프로젝트설정</a> -->
+    <a class="nav-link" use:link href="/" >프로젝트설정</a>
   </li>
   <li class="nav-item">
+    <a class="nav-link" use:link href="/gpt">RAG 테스트</a>
+  </li>
+  <!-- <li class="nav-item">
     <a class="nav-link" use:link href="/view/35" >TEST1</a>
   </li>
   <li class="nav-item">
     <a class="nav-link" use:link href="/board_write">TEST2</a>
-  </li>
+  </li> -->
 </ul>
 
 <!-- <input bind:value={$content}>

@@ -13,6 +13,10 @@
   let uploading; //업로드중
   let deleting; //삭제중
   let delete_list; //프로젝트 삭제 보여주기
+  let updated_instruction; //인스트럭션 업데이트 완료
+  let view_instruction; //인스트럭션 초기 프로젝트 선택시 불러오기
+
+  let project_starters_list_db = []; //사용자 시작 지시문
 
   let Icon = 'static/uploading.gif'
 
@@ -77,6 +81,34 @@
 
   ///
   ///
+  ///인스트럭션 추가
+  const upload_inst = async () => {
+    
+    if(!select_value) {
+      alert("프로젝트 선택을 먼저 진행 하세요.");
+      return;
+    }
+    
+    const textarea_value = document.getElementById('exampleFormControlTextarea1').value;
+
+    const res = await axios.post("http://192.168.4.76:5001/add_ai_instruction", {
+      project: select_value, 
+      inst: textarea_value,
+    }).then(response => {
+      console.log(response.data);
+      updated_instruction = response.data;
+
+      //업데이트 완료 2초가 보여주고 사라지게 하기
+      const notification = document.getElementById('alert_updated')
+      notification.classList.add('show')
+      setTimeout(() => {
+        notification.classList.remove('show')
+      }, 2000)
+    })
+   }
+
+  ///
+  ///
   //파일 삭제 API
   const delete_file = async (e) => {
 
@@ -131,6 +163,7 @@
     console.log(select_value)
 
     db_select_project_files(); //파일리스트 불러오기
+    db_select_project_instruction(); //지시문 불러오기
   }
   
   //DB 프로젝트 저장
@@ -181,6 +214,15 @@
       }).then(response => {
         project_file_list_db = response.data.recordsets[0];
         console.log(project_file_list_db);
+      })
+  }  
+  //DB 선택한 프로젝트 인스트럭션 부르기
+  const db_select_project_instruction = async () => {
+      const res = await axios.post("http://192.168.4.76:5001/view_ai_instruction", {
+        project: select_value,
+      }).then(response => {
+        view_instruction = response.data.recordsets[0][0].instruction;
+        console.log(view_instruction);
       })
   }  
   
@@ -297,15 +339,71 @@
       {:else}
         <li class="list-group-item">업로드 파일이 없습니다.</li>
       {/each}
-    </ul>
-    <p></p>
-    <div class="w-25 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 25%</div>
+    </ul>    
+    <!-- <div class="w-25 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 25%</div>
     <div class="w-50 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 50%</div>
     <div class="w-75 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 75%</div>
-    <div class="w-100 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 100%</div>
+    <div class="w-100 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 100%</div> -->
+
+  </div>
+
+  <div style="margin-top: 40px">
+    <h2>Instructions (개발 진행중)</h2>
+    <div class="mb-3">
+      <label for="exampleFormControlTextarea1" class="form-label">지시문을 입력하세요.</label>
+      <textarea class="form-control" id="exampleFormControlTextarea1" rows="5" bind:value={view_instruction}></textarea>
+    </div>
+    <div style="text-align:right;">
+      <span id="alert_updated">업데이트 완료 !! &nbsp;&nbsp;</span>
+      <button on:click={upload_inst} class="btn btn-outline-dark">업데이트</button>
+    </div>
+
+  </div>
+
+  <div style="margin-top: 40px">
+
+    <h2>Conversation starters (개발 진행중)</h2>
+
+    <!-- 사용자 시작 스타터 리스트 -->
+    {#each project_starters_list_db as list (list.no)}
+      <div>
+        <div class="form-floating mb-3">
+          <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
+          <label for="floatingInput">사용자에게 보여 줄 제목을 적으세요.</label>
+        </div>
+        <div class="form-floating">
+          <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
+          <label for="floatingPassword">지시문을 여기에 적으세요.</label>
+        </div>
+      </div>
+    {:else}
+      <div style="background-color: #f2f2f2; padding: 2px;">
+        <div class="form-floating mb-3">
+          <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
+          <label for="floatingInput">사용자에게 보여 줄 제목을 적으세요.</label>
+        </div>
+        <div class="form-floating">
+          <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
+          <label for="floatingPassword">지시문을 여기에 적으세요.</label>
+        </div>
+      </div>
+    {/each}
+
+    
 
   </div>
   
 
 </div>
 
+<style>
+  #alert_updated {
+    background: rgba(255, 165, 30, 0.3);
+    border-radius: 10px;
+    padding: 5px 10px;
+    display: none;
+  }
+  :global(#alert_updated.show) {    
+    display: inline-block;
+  }
+</style>

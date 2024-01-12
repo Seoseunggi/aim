@@ -6,4 +6,5 @@
 
 # production
 pyvenv.cfg
+.env
 
