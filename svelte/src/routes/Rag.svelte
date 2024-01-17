@@ -9,6 +9,7 @@
   let project_instruction; //DB로부터 받아온, 해당 프로젝트의 인스트럭션
   let project_name; //프로젝트 이름
   let url;
+  let random_image = Math.floor(Math.random() * 6); //이미지 랜덤 숫자 변수  0~3
 
   let project_starters_list_db = []; //스타터 리스트
 
@@ -20,7 +21,12 @@
 
 
   //DOM생성 후, DB리스트 불러오기 동작
-  onMount(async() => {
+  onMount(async() => {    
+
+    var introEle = jq("#intro");
+    jq("body").click(function() {
+      introEle.fadeOut();
+    });
 
     //alert(window.location.href)
     url = window.location.href.split('/');
@@ -60,8 +66,8 @@
       localStorage.removeItem("openai_thread");
       localStorage.removeItem("reply_history");
       addToDiscussion2(
-        "아이유",
-        "안녕하세요.\n갤럭시 웨어러블 가이드를 맡게 된 아이유 입니다. 새로운 대화를 시작 해 볼까요?"
+        "올리비아",
+        "안녕하세요.\n갤럭시 웨어러블 가이드를 맡게 된 올리비아 입니다. 새로운 대화를 시작 해 볼까요?"
       );
       console.log(localStorage.length);
     }
@@ -303,10 +309,11 @@
 
           //텍스트, 음성까지 모둘 불러온 후, 동작
           jq("#thinkAni").remove();
+          //setTimeout(() => jq("#thinkAni").remove(), 100);
 
           //텍스트표현
           console.log(response.data.message);
-          addToDiscussion2("아이유", response.data.message);
+          addToDiscussion2("올리비아", response.data.message);
 
           //히스토리에 저장 {} => object [] => array   array가 맨 바깥, object는 array 내부로 들어감.
           // [] 에 push 로 {} 를 넣음.
@@ -380,10 +387,16 @@
 
 
 
-<div id="container">
+<div id="container">  
+  <div id="intro"><img src='images/watch{random_image}.png' style="max-width: 100%; max-height:100%;" ></div>
   <!-- <h2 class="title1">Python RAG 테스트</h2> -->
   <div class="top_group">
-    <input id="project" type="text" value="watch" style="float: right" />
+    <div style="float: right">
+      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-boxes" viewBox="0 0 16 16">&nbsp;
+        <path d="M7.752.066a.5.5 0 0 1 .496 0l3.75 2.143a.5.5 0 0 1 .252.434v3.995l3.498 2A.5.5 0 0 1 16 9.07v4.286a.5.5 0 0 1-.252.434l-3.75 2.143a.5.5 0 0 1-.496 0l-3.502-2-3.502 2.001a.5.5 0 0 1-.496 0l-3.75-2.143A.5.5 0 0 1 0 13.357V9.071a.5.5 0 0 1 .252-.434L3.75 6.638V2.643a.5.5 0 0 1 .252-.434zM4.25 7.504 1.508 9.071l2.742 1.567 2.742-1.567zM7.5 9.933l-2.75 1.571v3.134l2.75-1.571zm1 3.134 2.75 1.571v-3.134L8.5 9.933zm.508-3.996 2.742 1.567 2.742-1.567-2.742-1.567zm2.242-2.433V3.504L8.5 5.076V8.21zM7.5 8.21V5.076L4.75 3.504v3.134zM5.258 2.643 8 4.21l2.742-1.567L8 1.076zM15 9.933l-2.75 1.571v3.134L15 13.067zM3.75 14.638v-3.134L1 9.933v3.134z"/>
+      </svg>
+      <input id="project" type="text" value="watch"  />
+    </div>
 
     <div id="model" class="model_view">
       <button class="btn btn-outline-secondary" type="button">SM-R940</button>
@@ -403,19 +416,14 @@
       <!-- 사용자 시작 스타터 리스트 -->
       <!-- {#each project_starters_list_db as list (list.no)} -->
       {#each project_starters_list_db as list, i}
-      <div class="col-sm-6 mb-3 mb-sm-0">
-        <button class="btn_starter" id={list.instruction} on:click={btn_starter}>
-        <!-- <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">{list.title}</h5>
-            <p class="card-text">{list.instruction}</p>
-            
-          </div>
-        </div> -->
-        {list.title} : 
-        {list.instruction}
-        </button>
-      </div>
+      <!-- <div class="card" style="width: 18rem;">
+        <div class="card-body">
+          <h5 class="card-title">{list.title}</h5>
+          <p class="card-text">{list.instruction}</p>
+          <button class="btn_starter" id={list.instruction} on:click={btn_starter}>질문하기</button>
+        </div>
+      </div> -->
+      <button class="btn_starter" id={list.instruction} on:click={btn_starter}>#{list.title}</button>
       {:else}
         <span></span>
       {/each}
@@ -464,6 +472,18 @@
 
 
 <style>
+  #intro {
+    /* background-color: #ccc; */
+    position:absolute;
+    width: 100%;
+    height: 60%;
+    top: 130px;
+    left: 50%;
+    transform: translate(-50%, 0%);
+    z-index: 3;
+    text-align: center;
+  }
+
   #container {
   width: 100%;
   min-height: 100%;
@@ -493,6 +513,7 @@
   text-align: left;
 }
 
+
 #result {
   position: absolute;
   align-content: center;
@@ -503,9 +524,9 @@
   bottom: 0;
   width: 100%;
   /*overflow-y: scroll;*/
-  margin: 0px 0 0px 0;
-  padding: 110px 16px 250px 16px;
-  z-index: -5;
+  margin: 110px 36px 245px 16px;
+  padding:  0 30px 0 0;
+  /* z-index: -5; */
 }
 
 #result #box {
@@ -541,22 +562,25 @@
   bottom: 0;
   width: 100%;
   padding: 0 16px 0 16px;
+  z-index: 4;
 }
 
 .row {
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
+  margin: 0;
 }
 
 .btn_starter {
   border: #d6d6d6 1px solid;
   border-radius: 10px;
   background-color: #fff;
-  width: 300px;
+  width: auto;
+  margin: 2px;
 }
 
 .card {
-  height: 82px;
+  height: 120px;
 }
 
 ul {
@@ -572,7 +596,8 @@ ul {
 :global(.chat_me .chat_ib p) {
   background: #ebebeb none repeat scroll 0 0;
   border-radius: 10px;
-  border: #cccccc 0px solid;
+  border: #cccccc 0px solid;  
+  box-shadow: 0 4px 12px 0px rgb(0 0 0 / 18%);
   font-size: 14px;
   color: #646464;
   margin: 0;
@@ -589,7 +614,8 @@ ul {
 
 :global(.chat_bot .chat_ib p) {
   background: #05728f none repeat scroll 0 0;
-  border-radius: 6px;
+  border-radius: 6px;  
+  box-shadow: 0 4px 12px 0px rgb(0 0 0 / 18%);
   font-size: 14px;
   color: #fff;
   margin: 0;

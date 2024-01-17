@@ -15,6 +15,9 @@
   let delete_list; //프로젝트 삭제 보여주기
   let updated_instruction; //인스트럭션 업데이트 완료
   let view_instruction; //인스트럭션 초기 프로젝트 선택시 불러오기
+  let updated_starter; //스타터 업데이트 완료
+  let view_starter_t;
+  let view_starter_c;
 
   let project_starters_list_db = []; //사용자 시작 지시문
 
@@ -22,11 +25,9 @@
 
   //DOM생성 후, DB리스트 불러오기 동작
   onMount(async() => {
-    // const res = await axios.post("http://192.168.4.76:5001/view_ai_project").then(response => {
-    // project_list_db = response.data.recordsets[0];
-    // console.log(project_list_db);    
-    //})
+
     db_select_project();
+
   })
 
   ///
@@ -57,7 +58,7 @@
       uploading = '' //업로드중 끝
     })
 
-    //MSSQL 리스트 저장
+    //MSSQL 프로젝트별 파일 리스트 저장
     for(const fi of files) {
       const res2 = await axios.post("http://192.168.4.76:5001/add_ai_project_files", {
       project: select_value,
@@ -83,13 +84,19 @@
   ///
   ///인스트럭션 추가
   const upload_inst = async () => {
+
     
     if(!select_value) {
       alert("프로젝트 선택을 먼저 진행 하세요.");
       return;
     }
     
-    const textarea_value = document.getElementById('exampleFormControlTextarea1').value;
+    let textarea_value = document.getElementById('exampleFormControlTextarea1').value;
+    textarea_value = textarea_value.replace(/▪/gi, "-");
+    textarea_value = textarea_value.replace(/'/gi, "`");
+    textarea_value = textarea_value.replace(/"/gi, "`");
+    
+    //alert(textarea_value)
 
     const res = await axios.post("http://192.168.4.76:5001/add_ai_instruction", {
       project: select_value, 
@@ -103,6 +110,40 @@
       notification.classList.add('show')
       setTimeout(() => {
         notification.classList.remove('show')
+      }, 2000)
+    })
+   }
+  
+   ///
+  ///
+  ///대화 시작문  추가
+  const upload_starter = async () => {
+    
+    if(!select_value) {
+      alert("프로젝트 선택을 먼저 진행 하세요.");
+      return;
+    }
+    
+    const s_title = document.getElementById('starter_title');
+    const s_content = document.getElementById('starter_content');
+
+    const res = await axios.post("http://192.168.4.76:5001/add_ai_starter", {
+      project: select_value, 
+      title: s_title.value,
+      content: s_content.value,
+    }).then(response => {
+      console.log(response.data);
+      updated_starter = response.data; //업데이트 스타터 추가 완료 확인 문구
+      
+      db_select_project_starter(); //스타터 불러오기
+
+      //업데이트 완료 2초가 보여주고 사라지게 하기
+      const notification = document.getElementById('starter_updated')
+      notification.classList.add('show')
+      setTimeout(() => {
+        notification.classList.remove('show');
+        s_title.value = null;
+        s_content.value = null; //입력창 초기화        
       }, 2000)
     })
    }
@@ -121,33 +162,58 @@
       return;
     }
 
-  const formData = new FormData();
-  formData.append("project", select_value); //프로젝트 정보도 함께 보냄
-  formData.append("file", e.target.id); //현재 파일 이름   
-  console.log("client message: 보낼준비");
-  deleting = '삭제중'
+    const formData = new FormData();
+    formData.append("project", select_value); //프로젝트 정보도 함께 보냄
+    formData.append("file", e.target.id); //현재 파일 이름   
+    console.log("client message: 보낼준비");
+    deleting = '삭제중'
 
-  //python uploadapi 파일 삭제
-  const res = await axios.post("http://192.168.4.76:5000/filedelete", formData).then(response => {
-    console.log(response.data);
-    //pdf_text = response.data;
-    deleting = '' //삭제중 끝
-  })
-
-  //MSSQL 리스트 삭제  
-  const res2 = await axios.post("http://192.168.4.76:5001/delete_ai_project_files", {
-    project: select_value,
-    filename: e.target.id
-    }).then(response => {
+    //python uploadapi 파일 삭제
+    const res = await axios.post("http://192.168.4.76:5000/filedelete", formData).then(response => {
       console.log(response.data);
-      //pdf_text = response.data;        
+      //pdf_text = response.data;
+      deleting = '' //삭제중 끝
     })
 
-  db_select_project_files(); //파일 리스트 갱신    
+    //MSSQL 리스트 삭제  
+    const res2 = await axios.post("http://192.168.4.76:5001/delete_ai_project_files", {
+      project: select_value,
+      filename: e.target.id
+      }).then(response => {
+        console.log(response.data);
+        //pdf_text = response.data;        
+      })
+
+    db_select_project_files(); //파일 리스트 갱신    
   }  
   ///파일 삭제 끝
   /////////////
 
+  ///
+  ///
+  //스타터 삭제 API
+  const delete_starter = async (e) => {
+
+if (confirm('콘텐츠를 삭제하시겠습니까?')) {
+  // Save it!
+  console.log('삭제 진행.');
+} else {
+  // Do nothing!
+  console.log('삭제 취소.');
+  return;
+}
+
+//python uploadapi 파일 삭제
+const res = await axios.post("http://192.168.4.76:5001/delete_ai_starter", {
+  user_no : e.target.id
+}).then(response => {
+  console.log(response.data);
+})
+
+db_select_project_starter(); //스타터 불러오기  
+}  
+///파일 삭제 끝
+/////////////
 
 
   
@@ -164,6 +230,7 @@
 
     db_select_project_files(); //파일리스트 불러오기
     db_select_project_instruction(); //지시문 불러오기
+    db_select_project_starter(); //스타터 불러오기
   }
   
   //DB 프로젝트 저장
@@ -225,6 +292,15 @@
         console.log(view_instruction);
       })
   }  
+  //DB 선택한 프로젝트 스타터 문구 부르기
+  const db_select_project_starter = async () => {
+      const res = await axios.post("http://192.168.4.76:5001/view_ai_starter", {
+        project: select_value,
+      }).then(response => {
+        project_starters_list_db = response.data.recordsets[0];
+        console.log(project_starters_list_db);
+      })
+  }  
   
   //프로젝트 삭제하기 버튼 누르기 동작
   function delete_project_view(e) {
@@ -267,6 +343,10 @@
   <p>{$content}</p> -->
 
   <div>
+    <svg style="display:inline-block; margin-bottom:8px;" xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-card-checklist" viewBox="0 0 16 16">
+      <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z"/>
+      <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0M7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0"/>
+    </svg>
     <h3 style="display:inline-block">프로젝트 선택</h3>
     <div style="display:inline-block; float:right"> 
       <button class="btn btn-outline-secondary" type="button" id="button-addon2" on:click={delete_project_view}>삭제하기</button>
@@ -310,7 +390,11 @@
   
   
   <div style="margin-top: 40px">
-    <h3>PDF 문서, 매뉴얼 업로드 [파일선택 / 드래그앤드랍]</h3>    
+    <svg style="display:inline-block; margin-bottom:8px;" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-cloud-arrow-up" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" d="M7.646 5.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708z"/>
+      <path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383m.653.757c-.757.653-1.153 1.44-1.153 2.056v.448l-.445.049C2.064 6.805 1 7.952 1 9.318 1 10.785 2.23 12 3.781 12h8.906C13.98 12 15 10.988 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 4.825 10.328 3 8 3a4.53 4.53 0 0 0-2.941 1.1z"/>
+    </svg>
+    <h3 style="display:inline-block">PDF 문서, 매뉴얼 업로드 [파일선택 / 드래그앤드랍]</h3>    
     <p></p>
 
     <input name="file" id="file" type="file" multiple bind:files>
@@ -339,16 +423,14 @@
       {:else}
         <li class="list-group-item">업로드 파일이 없습니다.</li>
       {/each}
-    </ul>    
-    <!-- <div class="w-25 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 25%</div>
-    <div class="w-50 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 50%</div>
-    <div class="w-75 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 75%</div>
-    <div class="w-100 p-3" style="background-color: #ccc; margin:5px 0px 5px 0px; font-size:12px;">Width 100%</div> -->
-
+    </ul>
   </div>
 
   <div style="margin-top: 40px">
-    <h2>Instructions (개발 진행중)</h2>
+    <svg style="display:inline-block; margin-bottom:8px;" xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-magic" viewBox="0 0 16 16">
+      <path d="M9.5 2.672a.5.5 0 1 0 1 0V.843a.5.5 0 0 0-1 0zm4.5.035A.5.5 0 0 0 13.293 2L12 3.293a.5.5 0 1 0 .707.707zM7.293 4A.5.5 0 1 0 8 3.293L6.707 2A.5.5 0 0 0 6 2.707zm-.621 2.5a.5.5 0 1 0 0-1H4.843a.5.5 0 1 0 0 1zm8.485 0a.5.5 0 1 0 0-1h-1.829a.5.5 0 0 0 0 1zM13.293 10A.5.5 0 1 0 14 9.293L12.707 8a.5.5 0 1 0-.707.707zM9.5 11.157a.5.5 0 0 0 1 0V9.328a.5.5 0 0 0-1 0zm1.854-5.097a.5.5 0 0 0 0-.706l-.708-.708a.5.5 0 0 0-.707 0L8.646 5.94a.5.5 0 0 0 0 .707l.708.708a.5.5 0 0 0 .707 0l1.293-1.293Zm-3 3a.5.5 0 0 0 0-.706l-.708-.708a.5.5 0 0 0-.707 0L.646 13.94a.5.5 0 0 0 0 .707l.708.708a.5.5 0 0 0 .707 0z"/>
+    </svg>
+    <h2 style="display:inline-block">Instructions</h2>
     <div class="mb-3">
       <label for="exampleFormControlTextarea1" class="form-label">지시문을 입력하세요.</label>
       <textarea class="form-control" id="exampleFormControlTextarea1" rows="5" bind:value={view_instruction}></textarea>
@@ -357,37 +439,46 @@
       <span id="alert_updated">업데이트 완료 !! &nbsp;&nbsp;</span>
       <button on:click={upload_inst} class="btn btn-outline-dark">업데이트</button>
     </div>
-
   </div>
 
-  <div style="margin-top: 40px">
+  <div style="margin-top: 4px">
 
-    <h2>Conversation starters (개발 진행중)</h2>
+    <svg style="display:inline-block; margin-bottom:8px;" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-chat-heart" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" d="M2.965 12.695a1 1 0 0 0-.287-.801C1.618 10.83 1 9.468 1 8c0-3.192 3.004-6 7-6s7 2.808 7 6-3.004 6-7 6a8 8 0 0 1-2.088-.272 1 1 0 0 0-.711.074c-.387.196-1.24.57-2.634.893a11 11 0 0 0 .398-2m-.8 3.108.02-.004c1.83-.363 2.948-.842 3.468-1.105A9 9 0 0 0 8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6a10.4 10.4 0 0 1-.524 2.318l-.003.011a11 11 0 0 1-.244.637c-.079.186.074.394.273.362a22 22 0 0 0 .693-.125M8 5.993c1.664-1.711 5.825 1.283 0 5.132-5.825-3.85-1.664-6.843 0-5.132"/>
+    </svg>
+    <h2 style="display:inline-block">Conversation starters</h2>
 
-    <!-- 사용자 시작 스타터 리스트 -->
-    {#each project_starters_list_db as list (list.no)}
-      <div>
-        <div class="form-floating mb-3">
-          <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
-          <label for="floatingInput">사용자에게 보여 줄 제목을 적으세요.</label>
-        </div>
-        <div class="form-floating">
-          <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
-          <label for="floatingPassword">지시문을 여기에 적으세요.</label>
-        </div>
+    
+    <label style="display: block;" for="exampleFormControlTextarea1" class="form-label">시작 문구 리스트</label>
+    <ul class="list-group">
+      <!-- 사용자 시작 스타터 리스트 -->
+      {#each project_starters_list_db as list (list.no)}
+      <li class="list-group-item">
+        <span style="vertical-align: middle;">{list.title} - {list.instruction}</span>&nbsp;&nbsp;
+        <button class="btn btn-outline-secondary" style="text-align:right" type="button"  id={list.no} on:click={delete_starter}>X</button>
+      </li>
+      {:else}
+        <li class="list-group-item">텅...</li>
+      {/each}
+    </ul>
+
+    <p></p>
+    <label for="exampleFormControlTextarea1" class="form-label">시작 문구 추가</label>
+    <div style="background-color: #f2f2f2; padding: 2px;">
+      <div class="form-floating mb-3">
+        <input type="text" class="form-control" id="starter_title" placeholder="name@example.com">
+        <label for="floatingInput">사용자에게 보여 줄 제목을 적으세요.</label>
       </div>
-    {:else}
-      <div style="background-color: #f2f2f2; padding: 2px;">
-        <div class="form-floating mb-3">
-          <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
-          <label for="floatingInput">사용자에게 보여 줄 제목을 적으세요.</label>
-        </div>
-        <div class="form-floating">
-          <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
-          <label for="floatingPassword">지시문을 여기에 적으세요.</label>
-        </div>
+      <div class="form-floating">
+        <input type="text" class="form-control" id="starter_content" placeholder="Password">
+        <label for="floatingPassword">대화문을 여기에 적으세요.</label>
       </div>
-    {/each}
+    </div>
+    <p></p>    
+    <div style="text-align:right;">
+      <span id="starter_updated">추가 완료 !! &nbsp;&nbsp;</span>
+      <button on:click={upload_starter} class="btn btn-outline-dark">추가하기</button>
+    </div>
 
     
 
@@ -404,6 +495,15 @@
     display: none;
   }
   :global(#alert_updated.show) {    
+    display: inline-block;
+  }
+  #starter_updated {
+    background: rgba(255, 165, 30, 0.3);
+    border-radius: 10px;
+    padding: 5px 10px;
+    display: none;
+  }
+  :global(#starter_updated.show) {    
     display: inline-block;
   }
 </style>

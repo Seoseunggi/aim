@@ -612,6 +612,68 @@ app.post("/view_ai_instruction", async (req, res, next) => {
     );
 });
 
+//starter 문구 추가
+app.post("/add_ai_starter", async (req, res, next) => {
+  const client_project = req.body.project;
+  const client_title = req.body.title;
+  const client_content = req.body.content;
+
+  const pool = await poolPromise;
+  const result = await pool
+    .request()
+    .query(
+      `INSERT INTO ai_project_starter (project, title, instruction) VALUES ('${client_project}', '${client_title}', '${client_content}' )`,
+      function (err, value) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("스타터 문구 추가 완료!!!!!");
+          res.send({ result: "스타터 문구 추가 완료!!!!!" });
+        }
+      }
+    );
+});
+
+//스타터 초기 로딩
+app.post("/view_ai_starter", async (req, res, next) => {
+  const client_project = req.body.project;
+
+  const pool = await poolPromise;
+  const result = await pool
+    .request()
+    .query(
+      `SELECT * from ai_project_starter WHERE project = '${client_project}'`,
+      function (err, value) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("complete view Starter DB instruction !!!!!");
+          res.send(value);
+        }
+      }
+    );
+});
+
+//스타터 개별 삭제
+app.post("/delete_ai_starter", async (req, res, next) => {
+  const client_no = req.body.user_no;
+
+  const pool = await poolPromise;
+  const result = await pool
+    .request()
+    .query(
+      `DELETE FROM ai_project_starter WHERE no = '${client_no}'`,
+      function (err, value) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("complete deleted Starter !!!!!");
+          res.send(value);
+        }
+      }
+    );
+});
+
 //파이썬에서 여기로 접속 테스트, req.body 로 받음
 app.post("/py", async (req, res, next) => {
   console.log(req.body.param1);
